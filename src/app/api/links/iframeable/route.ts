@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { DEFAULT_PLATFORM_DOMAIN } from "@/lib/constants/domains";
@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
   try {
     // Only the authenticated link editors need this probe. Leaving it open let
     // anyone use the deployment as a fetch proxy.
-    const { userId } = await auth();
+    const session = await auth();
+    const userId = session?.user?.id;
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

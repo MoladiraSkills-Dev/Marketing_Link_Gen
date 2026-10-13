@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
+import type { Session } from "next-auth";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
@@ -15,13 +16,18 @@ import {
 import type { inferAsyncReturnType } from "@trpc/server";
 
 export const createTRPCContext = async (opts: {
-  auth: Awaited<ReturnType<typeof auth>>;
+  auth: Session | null;
   headers: Headers;
 }) => {
   return {
     db,
-    ...opts,
     headers: opts.headers,
+    auth: opts.auth
+      ? {
+          ...opts.auth,
+          userId: (opts.auth.user?.id as string) ?? undefined,
+        }
+      : null,
   };
 };
 
@@ -48,8 +54,11 @@ export type TRPCContext = inferAsyncReturnType<typeof createTRPCContext>;
 
 // Protected context type with enforced userId
 export type ProtectedTRPCContext = Omit<TRPCContext, "auth"> & {
-  auth: Omit<NonNullable<TRPCContext["auth"]>, "userId"> & {
+  auth: NonNullable<TRPCContext["auth"]> & {
     userId: string;
+    user: NonNullable<NonNullable<TRPCContext["auth"]>["user"]> & {
+      id: string;
+    };
   };
   /** Whether the user has isAdmin=true, fetched once during auth */
   isAdmin: boolean;
@@ -62,13 +71,14 @@ const currentUserCache = new WeakMap<object, Promise<UserAccess | undefined>>();
 
 // Like protectedProcedure, but still reachable after a soft delete.
 export const softDeletedProcedure = t.procedure.use(async ({ ctx, next }) => {
-  if (!ctx.auth.userId) {
+  const userId = ctx.auth?.user?.id;
+  if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
   let cached = currentUserCache.get(ctx);
   if (!cached) {
-    cached = ensureUser(ctx.auth.userId);
+    cached = ensureUser(userId);
     currentUserCache.set(ctx, cached);
   }
   const currentUser = await cached;
@@ -83,8 +93,12 @@ export const softDeletedProcedure = t.procedure.use(async ({ ctx, next }) => {
   const protectedCtx: ProtectedTRPCContext = {
     ...ctx,
     auth: {
-      ...ctx.auth,
-      userId: ctx.auth.userId,
+      ...ctx.auth!,
+      userId,
+      user: {
+        ...ctx.auth!.user!,
+        id: userId,
+      },
     },
     isAdmin: currentUser?.isAdmin ?? false,
     deletedAt: currentUser?.deletedAt ?? null,
@@ -123,7 +137,7 @@ export type WorkspaceTRPCContext = ProtectedTRPCContext & {
 export const workspaceProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const hostname = ctx.headers.get("host") ?? DEFAULT_PLATFORM_DOMAIN;
 
-  const workspace = await resolveWorkspaceContext(ctx.auth.userId, hostname, ctx.db);
+  const workspace = await resolveWorkspaceContext(ctx.auth.user.id, hostname, ctx.db);
 
   return next({ ctx: { ...ctx, workspace } });
 });
@@ -155,7 +169,7 @@ export const teamProcedure = workspaceProcedure.use(({ ctx, next }) => {
  * Used for team creation and other Ultra-only features.
  */
 export const ultraProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  const hasUltra = await userHasUltraPlan(ctx.auth.userId, ctx.db);
+  const hasUltra = await userHasUltraPlan(ctx.auth.user.id, ctx.db);
 
   if (!hasUltra) {
     throw new TRPCError({

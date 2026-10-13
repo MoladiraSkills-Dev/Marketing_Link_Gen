@@ -18,6 +18,41 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
+/// ==========================================================================
+
+/// Auth Tables
+
+/// ===========================================================================
+
+export const authAccount = mysqlTable("Account", {
+  userId: varchar("userId", { length: 255 }).notNull(),
+  type: varchar("type", { length: 255 }).notNull(),
+  provider: varchar("provider", { length: 255 }).notNull(),
+  providerAccountId: varchar("providerAccountId", { length: 255 }).notNull(),
+  refresh_token: text("refresh_token"),
+  access_token: text("access_token"),
+  expires_at: int("expires_at"),
+  token_type: varchar("token_type", { length: 255 }),
+  scope: varchar("scope", { length: 255 }),
+  id_token: text("id_token"),
+  session_state: varchar("session_state", { length: 255 }),
+  }, (t) => ({pk: primaryKey({columns: [t.provider, t.providerAccountId]})})
+)
+
+export const authSession = mysqlTable("Session", {
+  sessionToken: varchar("sessionToken", { length: 255 }).primaryKey(),
+  userId: varchar("userId", { length: 255 }).notNull(),
+  expires: timestamp("expires").notNull(),
+})
+
+export const authVerificationToken = mysqlTable("VerificationToken", {
+  identifier: varchar("identifier", {length: 255}).notNull(),
+  token: varchar("token", { length: 255 }).notNull(),
+  expires: timestamp("expires").notNull(),
+}, (t) => ({pk: primaryKey({columns: [t.identifier, t.token]})}))
+
+
+
 // ============================================================================
 // TEAM TABLES
 // ============================================================================
@@ -163,6 +198,8 @@ export const user = mysqlTable(
     isAdmin: boolean("isAdmin").default(false),
     // Ban status
     banned: boolean("banned").default(false),
+    // bcrypt hash
+    password: varchar("password", { length: 255 }),
     bannedAt: timestamp("bannedAt"),
     bannedReason: varchar("bannedReason", { length: 255 }),
   },

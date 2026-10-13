@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { logger } from "@/lib/logger";

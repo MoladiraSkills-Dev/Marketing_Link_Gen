@@ -1,10 +1,9 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
+import { signOut } from "next-auth/react";
 import { IconLogout } from "@tabler/icons-react";
 
 export function SignOutButton() {
-  const { signOut } = useClerk();
 
   return (
     <button

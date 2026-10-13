@@ -1,8 +1,8 @@
 "use client";
 
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { IconMenu2, IconX } from "@tabler/icons-react";
 import { Link } from "next-view-transitions";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { Paths } from "@/lib/constants/app";
@@ -18,6 +18,7 @@ const routes = [
 ] as const;
 
 export const Header = () => {
+  const { data: session } = useSession();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -59,18 +60,19 @@ export const Header = () => {
 
           <div className="flex flex-1 items-center justify-end gap-1">
             <div className="hidden items-center gap-1 lg:flex">
-              <SignedOut>
-                <Link
-                  href={Paths.Login}
-                  className="rounded-lg px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-950/5"
-                >
-                  Sign in
-                </Link>
-                <ButtonLink href={Paths.Signup}>Get started</ButtonLink>
-              </SignedOut>
-              <SignedIn>
+              {!session?.user ? (
+                <>
+                  <Link
+                    href={Paths.Login}
+                    className="rounded-lg px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-950/5"
+                  >
+                    Sign in
+                  </Link>
+                  <ButtonLink href={Paths.Signup}>Get started</ButtonLink>
+                </>
+              ) : (
                 <ButtonLink href={Paths.Dashboard}>Dashboard</ButtonLink>
-              </SignedIn>
+              )}
             </div>
 
             <button
@@ -101,19 +103,20 @@ export const Header = () => {
               ))}
             </nav>
             <div className="mt-3 grid gap-2 border-t border-neutral-950/[0.07] pt-3">
-              <SignedOut>
-                <ButtonLink href={Paths.Login} variant="secondary" size="lg" arrow={false}>
-                  Sign in
-                </ButtonLink>
-                <ButtonLink href={Paths.Signup} size="lg">
-                  Get started
-                </ButtonLink>
-              </SignedOut>
-              <SignedIn>
+              {!session?.user ? (
+                <>
+                  <ButtonLink href={Paths.Login} variant="secondary" size="lg" arrow={false}>
+                    Sign in
+                  </ButtonLink>
+                  <ButtonLink href={Paths.Signup} size="lg">
+                    Get started
+                  </ButtonLink>
+                </>
+              ) : (
                 <ButtonLink href={Paths.Dashboard} size="lg">
                   Dashboard
                 </ButtonLink>
-              </SignedIn>
+              )}
             </div>
           </div>
         )}

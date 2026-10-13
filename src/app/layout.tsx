@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
 import { ViewTransitions } from "next-view-transitions";
 import Script from "next/script";
 
@@ -49,14 +49,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      localization={{
-        signIn: { start: { title: "Welcome back", subtitle: "Sign in to continue" } },
-        signUp: {
-          start: { title: "Create your account", subtitle: "Start shortening in seconds" },
-        },
-      }}
-    >
+    <SessionProvider>
       <ViewTransitions>
         {env.UMAMI_TRACKING_ID && (
           <Script
@@ -93,6 +86,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </CSPostHogProvider>
         </html>
       </ViewTransitions>
-    </ClerkProvider>
+    </SessionProvider>
   );
 }

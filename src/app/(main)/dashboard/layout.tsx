@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { IconBan, IconTrash } from "@tabler/icons-react";
 import { Funnel_Sans } from "next/font/google";
 
@@ -29,8 +29,9 @@ export default async function DashboardLayout({ children }: Props) {
   const session = await auth();
   let isAdmin = false;
 
-  if (session?.userId) {
-    const currentUser = await ensureUser(session.userId);
+  const userId = session?.user?.id;
+  if (userId) {
+    const currentUser = await ensureUser(userId);
 
     isAdmin = currentUser?.isAdmin ?? false;
 

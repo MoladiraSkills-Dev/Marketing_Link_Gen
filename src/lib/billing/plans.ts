@@ -95,32 +95,12 @@ const ENTITLED_STATUSES = new Set(["active", "on_trial", "past_due"]);
  * entitled until its `endsAt` passes (users keep access until the end of the
  * period they already paid for).
  */
-export function isSubscriptionEntitled(subscription?: Subscription | null): boolean {
-  if (!subscription) return false;
-
-  const status = subscription.status ?? "";
-  if (ENTITLED_STATUSES.has(status)) return true;
-
-  if (status === "cancelled" && subscription.endsAt) {
-    return subscription.endsAt.getTime() > Date.now();
-  }
-
-  return false;
+export function isSubscriptionEntitled(_subscription?: Subscription | null): boolean {
+  return true;
 }
 
-export function resolvePlan(subscription?: Subscription | null): Plan {
-  if (!subscription || !isSubscriptionEntitled(subscription)) {
-    return "free";
-  }
-
-  const mappedPlan =
-    getPlanFromIds(subscription.variantId, subscription.productId) ?? subscription.plan;
-
-  if (mappedPlan === "ultra" || mappedPlan === "pro") {
-    return mappedPlan;
-  }
-
-  return "pro"; // entitled subscription without recognized plan defaults to pro
+export function resolvePlan(_subscription?: Subscription | null): Plan {
+  return "ultra"; // Self-hosted: every user has full Ultra access
 }
 
 export function getPlanCaps(plan: Plan): PlanCaps {

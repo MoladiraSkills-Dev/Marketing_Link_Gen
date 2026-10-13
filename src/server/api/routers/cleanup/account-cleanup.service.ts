@@ -1,4 +1,3 @@
-import { clerkClient } from "@clerk/nextjs/server";
 import { and, eq, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 
 import { DELETION_GRACE_PERIOD_DAYS, purgeDateFor } from "@/lib/account-deletion/constants";
@@ -120,16 +119,9 @@ async function purgeAccount(userId: string, result: AccountCleanupResult): Promi
 
     if (!current?.deletedAt || purgeDateFor(current.deletedAt) > new Date()) return false;
 
-    // Clerk first, so nobody signs in mid-purge. Failure aborts; next run retries.
-    try {
-      await (await clerkClient()).users.deleteUser(userId);
-    } catch (err) {
-      // SAFETY: Clerk's backend SDK throws errors carrying a numeric `status`;
-      // reading it off an unknown shape yields undefined, which we rethrow. A 404
-      // means the identity is already gone, which is not a failure.
-      const status = (err as { status?: number }).status;
-      if (status !== 404) throw err;
-    }
+    // NOTE: With self-hosted NextAuth credentials auth, there is no external identity
+    // provider to call — the user row itself is the source of truth. Deleting it below
+    // prevents any future login, which is sufficient to "lock" the account mid-purge.
 
     // Before the customDomain rows go, or a failed hostname can't be found again.
     await Promise.all(domains.map((d) => (d.domain ? deleteCustomHostname(d.domain) : undefined)));

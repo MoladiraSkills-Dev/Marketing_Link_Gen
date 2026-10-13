@@ -1,6 +1,6 @@
 "use client";
 
-import { useClerk } from "@clerk/nextjs";
+import { signOut } from "next-auth/react";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -39,7 +39,6 @@ import type { RequestAccountDeletionInput } from "@/server/api/routers/account-d
 type FormData = RequestAccountDeletionInput;
 
 export function DeleteAccountSection() {
-  const { signOut } = useClerk();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
 
@@ -59,7 +58,7 @@ export function DeleteAccountSection() {
 
   const deleteMutation = api.accountDeletion.request.useMutation({
     onSuccess: () => {
-      void signOut({ redirectUrl: "/" });
+      void signOut({ callbackUrl: "/" });
     },
     onError: (error) => toast.error(error.message || "Couldn't delete your account"),
   });

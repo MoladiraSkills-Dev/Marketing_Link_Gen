@@ -39,24 +39,8 @@ export function AddCustomDomainModal() {
       await revalidateRoute("/dashboard/domains");
     },
   });
-  const createCheckoutMutation = api.lemonsqueezy.createCheckoutOrUpdate.useMutation({
-    onSuccess: async (data) => {
-      if (data.status === "redirect" && data.url) {
-        window.location.href = data.url;
-      }
-    },
-  });
-
   const handleDomainChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDomain(e.target.value);
-  };
-
-  const handleUpgrade = async () => {
-    toast.promise(createCheckoutMutation.mutateAsync({ plan: "pro" }), {
-      loading: "Creating checkout session...",
-      success: "Checkout session created successfully",
-      error: "Failed to create checkout session",
-    });
   };
 
   const handleCreateDomain = () => {
@@ -89,7 +73,7 @@ export function AddCustomDomainModal() {
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-blue-700"
         >
           <IconPlus size={16} stroke={2} />
-          {isProUser ? "Add Domain" : "Upgrade to Add Domain"}
+          Add Domain
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[440px]">
@@ -156,24 +140,14 @@ export function AddCustomDomainModal() {
           >
             Cancel
           </Button>
-          {isProUser ? (
-            <Button
-              type="submit"
-              onClick={handleCreateDomain}
-              disabled={!domain || createCustomDomainMutation.isLoading}
-              className="h-9 bg-blue-600 text-[13px] hover:bg-blue-700"
-            >
-              {createCustomDomainMutation.isLoading ? "Adding..." : "Add Domain"}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleUpgrade}
-              className="h-9 bg-blue-600 text-[13px] hover:bg-blue-700"
-            >
-              Upgrade to Pro
-            </Button>
-          )}
+          <Button
+            type="submit"
+            onClick={handleCreateDomain}
+            disabled={!domain || createCustomDomainMutation.isLoading}
+            className="h-9 bg-blue-600 text-[13px] hover:bg-blue-700"
+          >
+            {createCustomDomainMutation.isLoading ? "Adding..." : "Add Domain"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

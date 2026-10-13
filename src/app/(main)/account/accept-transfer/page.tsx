@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
 import {
   AlertCircle,
   ArrowRight,
@@ -18,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Suspense } from "react";
 import { toast } from "sonner";
 
@@ -81,7 +81,9 @@ function LoadingSpinner() {
 function AcceptTransferContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { status } = useSession();
+  const isSignedIn = status === "authenticated";
+  const isLoaded = status !== "loading";
   const token = searchParams.get("token");
 
   const transferDetails = api.accountTransfer.getByToken.useQuery(

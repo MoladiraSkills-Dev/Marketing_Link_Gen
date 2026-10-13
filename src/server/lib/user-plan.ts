@@ -16,17 +16,11 @@ export type DbClient = typeof db | TransactionClient;
  * short-circuit without a DB hit since teams are always on Ultra.
  */
 export async function isOwnerOnPaidPlan(
-  userId: string,
-  teamId: number | null,
-  dbClient: DbClient = db,
+  _userId: string,
+  _teamId: number | null,
+  _dbClient: DbClient = db,
 ): Promise<boolean> {
-  if (teamId !== null) return true;
-
-  const sub = await dbClient.query.subscription.findFirst({
-    where: eq(subscription.userId, userId),
-  });
-
-  return resolvePlan(sub ?? null) !== "free";
+  return true;
 }
 
 export type UserPlanContext = {

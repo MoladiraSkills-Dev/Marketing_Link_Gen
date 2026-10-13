@@ -1,10 +1,8 @@
-import { cancelSubscription, getSubscription } from "@lemonsqueezy/lemonsqueezy.js";
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull, or } from "drizzle-orm";
 
 import { DELETION_CASCADE_REASON, purgeDateFor } from "@/lib/account-deletion/constants";
 import { isSubscriptionEntitled, resolvePlan } from "@/lib/billing/plans";
-import { configureLemonSqueezy } from "@/lib/config/lemonsqueezy";
 import { buildCacheKey, deleteFromCache } from "@/lib/core/cache";
 import { logger } from "@/lib/logger";
 import { runBackgroundTask } from "@/lib/utils/background";
@@ -114,45 +112,6 @@ export async function requestAccountDeletion(
 
   const userSubscription = currentUser.subscriptions;
   const planSnapshot = resolvePlan(userSubscription);
-
-  // A cancelled subscription stays entitled until endsAt; don't cancel it twice.
-  const alreadyCancelled = userSubscription?.status === "cancelled";
-
-  if (
-    userSubscription?.subscriptionId &&
-    !alreadyCancelled &&
-    isSubscriptionEntitled(userSubscription)
-  ) {
-    configureLemonSqueezy();
-    const cancelled = await cancelSubscription(userSubscription.subscriptionId);
-    let remote = cancelled.data?.data.attributes;
-
-    // An earlier attempt may have cancelled remotely without recording it here.
-    if (cancelled.error) {
-      const current = await getSubscription(userSubscription.subscriptionId);
-      remote = current.data?.data.attributes;
-
-      if (remote?.status !== "cancelled" && remote?.status !== "expired") {
-        log.error(
-          { err: cancelled.error, userId },
-          "failed to cancel subscription before deletion",
-        );
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            "We couldn't cancel your subscription, so your account was not deleted. Please try again or contact support@ishortn.ink.",
-        });
-      }
-    }
-
-    await ctx.db
-      .update(subscription)
-      .set({
-        status: remote?.status,
-        endsAt: remote?.ends_at ? new Date(remote.ends_at) : null,
-      })
-      .where(eq(subscription.userId, userId));
-  }
 
   // Skip already-blocked links so restore can't lift an abuse block.
   const cascadeTarget = and(

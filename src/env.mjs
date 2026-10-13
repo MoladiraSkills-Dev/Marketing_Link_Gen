@@ -36,10 +36,6 @@ export const env = createEnv({
     CLOUDFLARE_API_TOKEN: z.string().optional(),
     CLOUDFLARE_SAAS_ZONE_ID: z.string().optional(),
     CUSTOM_DOMAIN_CNAME_TARGET: z.string().default("cname.ishortn.ink"),
-    // Lemon Squeezy billing
-    LEMONSQUEEZY_API_KEY: z.string().optional(),
-    LEMONSQUEEZY_STORE_ID: z.string().optional(),
-    LEMONSQUEEZY_WEBHOOK_SECRET: z.string().optional(),
     // Read by @ai-sdk/openai directly
     OPENAI_API_KEY: z.string().optional(),
     // Secret key used to HMAC visitor IPs before storage.
@@ -50,6 +46,10 @@ export const env = createEnv({
     // beacons. Optional: when unset, tokens are not issued and no verification
     // events are accepted — the feature is effectively disabled.
     VERIFIED_CLICKS_SECRET: z.string().min(32).optional(),
+    NEXTAUTH_SECRET: z.string().optional(),
+    NEXTAUTH_URL: z.string().url().optional(),
+    AUTH_SECRET: z.string().optional(),
+    AUTH_URL: z.string().url().optional(),
   },
 
   /**
@@ -62,6 +62,8 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: z.string().url(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+    // PostHog dashboard embed URL (from PostHog → Dashboards → Share → Embed)
+    NEXT_PUBLIC_POSTHOG_EMBED_URL: z.string().url().optional(),
     // Optional ISO date shown in the custom-domain migration notice
     NEXT_PUBLIC_DOMAIN_MIGRATION_DEADLINE: z
       .string()
@@ -99,16 +101,18 @@ export const env = createEnv({
     CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
     CLOUDFLARE_SAAS_ZONE_ID: process.env.CLOUDFLARE_SAAS_ZONE_ID,
     CUSTOM_DOMAIN_CNAME_TARGET: process.env.CUSTOM_DOMAIN_CNAME_TARGET,
-    LEMONSQUEEZY_API_KEY: process.env.LEMONSQUEEZY_API_KEY,
-    LEMONSQUEEZY_STORE_ID: process.env.LEMONSQUEEZY_STORE_ID,
-    LEMONSQUEEZY_WEBHOOK_SECRET: process.env.LEMONSQUEEZY_WEBHOOK_SECRET,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     IP_HASH_SECRET: process.env.IP_HASH_SECRET,
     VERIFIED_CLICKS_SECRET: process.env.VERIFIED_CLICKS_SECRET,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AUTH_SECRET: process.env.AUTH_SECRET,
+    AUTH_URL: process.env.AUTH_URL,
     // Client-side env vars
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_POSTHOG_EMBED_URL: process.env.NEXT_PUBLIC_POSTHOG_EMBED_URL,
     NEXT_PUBLIC_DOMAIN_MIGRATION_DEADLINE: process.env.NEXT_PUBLIC_DOMAIN_MIGRATION_DEADLINE,
   },
   /**

@@ -1,7 +1,8 @@
 "use client";
 
-import { useClerk, useUser } from "@clerk/nextjs";
+import { signOut, useSession } from "next-auth/react";
 import {
+  IconActivity,
   IconBan,
   IconChartBar,
   IconChevronUp,
@@ -47,6 +48,11 @@ const navigationItems = [
     name: "Analytics",
     href: "/dashboard/analytics/overview",
     icon: IconChartBar,
+  },
+  {
+    name: "Web Traffic",
+    href: "/dashboard/traffic",
+    icon: IconActivity,
   },
   { name: "QR Codes", href: "/dashboard/qrcodes", icon: IconQrcode },
   { name: "Campaigns", href: "/dashboard/campaigns", icon: IconSpeakerphone },
@@ -129,8 +135,8 @@ export function AppSidebar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { data: session } = useSession();
+  const user = session?.user;
 
   return (
     <>
@@ -322,17 +328,17 @@ export function AppSidebar({
                 <PopoverTrigger asChild>
                   <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-50 dark:hover:bg-accent/50">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.imageUrl} alt={user?.firstName || "User"} />
+                      <AvatarImage src={user?.image ?? undefined} alt={user?.name ?? "User"} />
                       <AvatarFallback className="bg-neutral-100 dark:bg-muted text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                        {user?.firstName?.[0] || user?.username?.[0] || "U"}
+                        {user?.name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1 text-left">
                       <p className="truncate text-[13px] font-medium text-neutral-900 dark:text-foreground">
-                        {user?.firstName || user?.username || "User"}
+                        {user?.name ?? user?.email?.split("@")[0] ?? "User"}
                       </p>
                       <p className="truncate text-[11px] text-neutral-400 dark:text-neutral-500">
-                        {user?.primaryEmailAddress?.emailAddress}
+                        {user?.email}
                       </p>
                     </div>
                     <IconChevronUp
@@ -369,7 +375,7 @@ export function AppSidebar({
                     <div className="my-1 h-px bg-neutral-100 dark:bg-border/50" />
                     <button
                       onClick={() => {
-                        signOut();
+                        void signOut({ callbackUrl: "/auth/sign-in" });
                         setIsUserMenuOpen(false);
                         setIsMobileMenuOpen(false);
                       }}

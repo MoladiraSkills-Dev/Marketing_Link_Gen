@@ -1,28 +1,25 @@
-import { SignUp } from "@clerk/nextjs";
-
-import { siteClerkAppearance } from "../../_shared/clerk-appearance";
+import { SignUpForm } from "../_components/sign-up-form";
 
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ url?: string; next?: string }>;
+  searchParams: Promise<{
+    url?: string;
+    next?: string;
+    callbackUrl?: string;
+    redirect_url?: string;
+  }>;
 }) {
-  const { url, next } = await searchParams;
-  // `next` is an internal destination to land on after auth (e.g. checkout).
-  // Restrict to same-origin paths to avoid open redirects.
-  const safeNext = next && /^\/(?![/\\])/.test(next) ? next : null;
-  const afterSignUpUrl = safeNext
-    ? safeNext
-    : url
-      ? `/dashboard/link/new?url=${encodeURIComponent(url)}`
-      : "/dashboard";
+  const params = await searchParams;
 
-  return (
-    <SignUp
-      path="/auth/sign-up"
-      appearance={siteClerkAppearance}
-      forceRedirectUrl={afterSignUpUrl}
-      signInForceRedirectUrl={afterSignUpUrl}
-    />
-  );
+  const target =
+    params.callbackUrl ??
+    params.next ??
+    params.redirect_url ??
+    (params.url ? `/dashboard/link/new?url=${encodeURIComponent(params.url)}` : "/dashboard");
+
+  const safeTarget =
+    target.startsWith("/") && !target.startsWith("//") ? target : "/dashboard";
+
+  return <SignUpForm redirectUrl={safeTarget} />;
 }
