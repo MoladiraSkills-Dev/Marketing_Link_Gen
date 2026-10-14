@@ -5,7 +5,7 @@
   "description": "URL shortening and link management platform",
   "scripts": {
     "setup": "bun scripts/dev/setup.ts",
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "d": "bun run setup && bun run dev",
     "build": "next build",
     "start": "next start",
@@ -21,7 +21,7 @@
     "seed": "bun scripts/dev/seed.ts",
     "webhook": "bun scripts/dev/webhook.ts",
     "cron": "bun scripts/dev/cron.ts",
-    "tunnel": "cloudflared tunnel --url http://localhost:3000",
+    "tunnel": "npx localtunnel --port 3000",
     "email:dev": "email dev --dir src/emails --port 3001",
     "test": "bun test",
     "lint": "oxlint",

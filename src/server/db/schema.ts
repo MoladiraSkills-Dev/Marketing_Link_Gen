@@ -453,6 +453,7 @@ export const qrcode = mysqlTable(
       "stripe",
       "fluid-line",
       "stripe-column",
+      "squircle",
     ]).notNull(),
 
     // Corner style
@@ -464,6 +465,7 @@ export const qrcode = mysqlTable(
       "rounded-circle",
       "rounded",
       "circle-star",
+      "octagon",
     ]).notNull(),
 
     // Color

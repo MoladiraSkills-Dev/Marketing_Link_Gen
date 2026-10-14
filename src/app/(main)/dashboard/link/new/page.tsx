@@ -294,7 +294,7 @@ export default function CreateLinkPage() {
         .catch(() => {
           // Set fallback metadata if fetch fails
           setMetaData({
-            title: "iShortn",
+            title: "Moladira",
             description: "URL Shortener",
             image: "",
             favicon: "",
@@ -517,7 +517,7 @@ export default function CreateLinkPage() {
                         </Select>
                         <div className="h-4 w-px bg-neutral-200 dark:bg-border" />
                         <input
-                          placeholder="short-link"
+                          placeholder="Campaign-link"
                           className="h-full flex-1 border-0 bg-transparent px-3 text-[13px] font-medium text-neutral-900 dark:text-foreground placeholder:text-neutral-400 focus:outline-none"
                           {...field}
                         />

@@ -11,6 +11,9 @@ if (process.env.NODE_ENV === "development") {
 
 /** @type {import("next").NextConfig} */
 const config = {
+  // Allow LAN/network access to Next.js dev resources (HMR, static chunks).
+  // Safe to keep — only applies during `next dev`.
+  allowedDevOrigins: ["192.168.68.104", "192.168.68.*"],
   experimental: {
     optimizePackageImports: ["@tabler/icons-react"],
   },

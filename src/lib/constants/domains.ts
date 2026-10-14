@@ -2,7 +2,10 @@
 // links and the preferred host for short-link previews. All
 // entries must be wired at the infrastructure layer (DNS + SSL + host) and
 // resolve to this Next.js app.
-export const PLATFORM_DOMAINS = ["isht.ink", "ishortn.ink"] as const;
+export const PLATFORM_DOMAINS = [
+  "moladiraskills.co.za",
+  "fibregems.com",
+] as const;
 
 export type PlatformDomain = (typeof PLATFORM_DOMAINS)[number];
 
@@ -12,8 +15,13 @@ export const DEFAULT_PLATFORM_DOMAIN: PlatformDomain = PLATFORM_DOMAINS[0];
 // navigation must stay on this host instead of the shorter link domain.
 export const APP_BASE_DOMAIN = "ishortn.ink";
 
-export function isPlatformDomain(domain: string | null | undefined): domain is PlatformDomain {
-  return !!domain && PLATFORM_DOMAINS.some((platformDomain) => platformDomain === domain);
+export function isPlatformDomain(
+  domain: string | null | undefined,
+): domain is PlatformDomain {
+  return (
+    !!domain &&
+    PLATFORM_DOMAINS.some((platformDomain) => platformDomain === domain)
+  );
 }
 
 // Base host for authenticated app URLs (team invites, workspace switching,
