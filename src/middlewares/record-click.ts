@@ -18,17 +18,26 @@ import { enqueueClickEvent } from "@/server/lib/click-queue";
  * Returns null when the alias/domain pair doesn't resolve.
  */
 export async function resolveLink(domain: string, alias: string): Promise<Link | null> {
-  const cacheKey = buildCacheKey(domain, alias);
+  const cleanAlias = alias.replace(/^\/+|\/+$/g, "");
+  const cacheKey = buildCacheKey(domain, cleanAlias);
   const cached: Link | null = await getFromCache(cacheKey);
   if (cached) return cached;
 
-  const link = await db.query.link.findFirst({
+  let link = await db.query.link.findFirst({
     where: (table, { and, eq }) =>
       and(
         eq(table.domain, normalizeDomain(domain)),
-        sql`lower(${table.alias}) = lower(${alias.replace("/", "")})`,
+        sql`lower(${table.alias}) = lower(${cleanAlias})`,
       ),
   });
+
+  // In development, if no link matched the specific domain, allow finding by alias
+  if (!link && process.env.NODE_ENV === "development") {
+    link = await db.query.link.findFirst({
+      where: (table, { sql }) => sql`lower(${table.alias}) = lower(${cleanAlias})`,
+    });
+  }
+
   if (!link) return null;
 
   await runBackgroundTask(setInCache(cacheKey, link));

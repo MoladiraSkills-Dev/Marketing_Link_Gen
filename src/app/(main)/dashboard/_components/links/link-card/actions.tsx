@@ -108,7 +108,11 @@ export const LinkActions = ({ link }: LinkActionsProps) => {
   });
 
   const copyPublicStatsLink = async () => {
-    await copyToClipboard(`https://ishortn.ink/analytics/${link.alias}?domain=${link.domain}`);
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    const baseUrl = isLocalhost ? window.location.origin : "https://ishortn.ink";
+    await copyToClipboard(`${baseUrl}/analytics/${link.alias}?domain=${link.domain}`);
   };
 
   const handleLinkToggleMutation = async () => {
@@ -283,7 +287,12 @@ export const LinkActions = ({ link }: LinkActionsProps) => {
       <QRCodeModal
         open={qrModal}
         setOpen={setQrModal}
-        destinationUrl={`https://${link.domain}/${link.alias}`}
+        destinationUrl={
+          typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+            ? `${window.location.origin}/${link.alias}`
+            : `https://${link.domain}/${link.alias}`
+        }
       />
       <ChangeLinkPasswordModal
         open={openChangePasswordModal}

@@ -65,9 +65,13 @@ function appendUtmParams(baseUrl: string, utmParams: Link["utmParams"]): string 
   if (!utmParams) return baseUrl;
 
   try {
-    const url = new URL(baseUrl);
     const keys = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+    const hasAnyUtm = keys.some(
+      (key) => utmParams[key] !== undefined && utmParams[key] !== null && utmParams[key] !== "",
+    );
+    if (!hasAnyUtm) return baseUrl;
 
+    const url = new URL(baseUrl);
     for (const key of keys) {
       const value = utmParams[key];
       if (value !== undefined && value !== null && value !== "") {
@@ -180,17 +184,21 @@ export async function resolveShortLink(
       const destinationUrl = appendUtmParams(geoResult.destination, link.utmParams);
       const { visitId, verificationToken } = issueToken(destinationUrl);
 
-      void runBackgroundTask(
-        recordClick({
-          headers,
-          link,
-          ip,
-          country,
-          city,
-          matchedGeoRuleId: geoResult.ruleId,
-          visitId,
-        }),
-      );
+      const clickTask = recordClick({
+        headers,
+        link,
+        ip,
+        country,
+        city,
+        matchedGeoRuleId: geoResult.ruleId,
+        visitId,
+      });
+
+      if (process.env.NODE_ENV === "development") {
+        await clickTask.catch((err) => log.error({ err }, "recordClick failed in dev"));
+      } else {
+        void runBackgroundTask(clickTask);
+      }
 
       return { url: destinationUrl, visitId, verificationToken };
     }
@@ -203,7 +211,13 @@ export async function resolveShortLink(
     const destinationUrl = appendUtmParams(link.url, link.utmParams);
     const { visitId, verificationToken } = issueToken(destinationUrl);
 
-    void runBackgroundTask(recordClick({ headers, link, ip, country, city, visitId }));
+    const clickTask = recordClick({ headers, link, ip, country, city, visitId });
+
+    if (process.env.NODE_ENV === "development") {
+      await clickTask.catch((err) => log.error({ err }, "recordClick failed in dev"));
+    } else {
+      void runBackgroundTask(clickTask);
+    }
 
     return {
       url: destinationUrl,

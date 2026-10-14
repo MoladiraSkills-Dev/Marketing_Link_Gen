@@ -1,7 +1,5 @@
 import { defineConfig } from "drizzle-kit";
 
-import { DATABASE_PREFIX } from "@/lib/constants/app";
-
 export default defineConfig({
   schema: "./src/server/db/schema.ts",
   out: "./drizzle",
@@ -9,5 +7,5 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-  tablesFilter: [`${DATABASE_PREFIX}_*`],
+  // No tablesFilter — tables are unprefixed (User, Link, LinkVisit, etc.)
 });

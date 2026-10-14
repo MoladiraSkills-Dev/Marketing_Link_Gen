@@ -40,7 +40,12 @@ export async function reserveEventUsage(
   dbClient: DbClient,
 ): Promise<EventUsageReservation> {
   const ctx = await getUserPlanContext(userId, dbClient);
-  if (!ctx) return { allowed: 0, alert: null };
+  if (!ctx) {
+    if (process.env.NODE_ENV === "development") {
+      return { allowed: requested, alert: null };
+    }
+    return { allowed: 0, alert: null };
+  }
 
   const { plan, caps } = ctx;
   const limit = caps.eventsLimit;

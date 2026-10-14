@@ -1,6 +1,8 @@
 name: ishortn
 
 services:
+
+  # ─── Database ────────────────────────────────────────────────────────────────
   db:
     image: mysql:8.4
     # Production collation; see drizzle/0060_*
@@ -24,7 +26,26 @@ services:
       retries: 30
       start_period: 10s
 
-  # S3 stand-in for R2; set R2_ENDPOINT in .env to use it
+  # ─── Email: Mailpit ──────────────────────────────────────────────────────────
+  # Catches all outgoing SMTP mail — nothing is delivered for real.
+  # View sent emails at http://localhost:8025
+  # Usage: docker compose --profile email up -d
+  # App .env: SMTP_HOST=localhost  SMTP_PORT=1025
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: [email]
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"   # SMTP — app sends here
+      - "${MAILPIT_UI_PORT:-8025}:8025"     # Web inbox — open in browser
+    environment:
+      MP_MAX_MESSAGES: 500
+    restart: unless-stopped
+
+  # ─── Storage: MinIO ──────────────────────────────────────────────────────────
+  # S3-compatible stand-in for Cloudflare R2 — for QR logos, bio avatars, OG images
+  # Console: http://localhost:9001  login: ishortn / ishortn-secret
+  # Usage: docker compose --profile storage up -d
+  # App .env: uncomment the R2_* block in .env (R2_ENDPOINT=http://127.0.0.1:9000)
   minio:
     image: minio/minio:latest
     profiles: [storage]
@@ -56,6 +77,56 @@ services:
         mc anonymous set download local/ishortn-images
       "
 
+  # ─── Analytics: Umami ────────────────────────────────────────────────────────
+  # Self-hosted page-view analytics — open-source Google Analytics replacement
+  # Dashboard: http://localhost:3002  default login: admin / umami
+  # Usage: docker compose --profile analytics up -d
+  # Then: create a website in Umami, copy tracking ID → UMAMI_TRACKING_ID in .env
+  umami-db:
+    image: postgres:15-alpine
+    profiles: [analytics]
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    volumes:
+      - umami_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    profiles: [analytics]
+    ports:
+      - "${UMAMI_PORT:-3002}:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:umami@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: changeme-umami-secret-32chars-min
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── AI: Ollama ──────────────────────────────────────────────────────────────
+  # Local LLM runner — replaces OpenAI for alias suggestions and URL classification
+  # API: http://localhost:11434
+  # Usage: docker compose --profile ai up -d
+  # Then pull a model: docker exec ishortn-ollama-1 ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:latest
+    profiles: [ai]
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
 volumes:
   db_data:
   minio_data:
+  umami_db_data:
+  ollama_data:
